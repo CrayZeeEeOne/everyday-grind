@@ -1,0 +1,40 @@
+<!doctype html><meta charset="utf-8"><title>Тести</title><pre id="out">…</pre>
+<script type="module">
+import { DEFAULT_GAMES, computeScore } from '../site/js/scoring.js';
+import { dayStandings, monthStandings, streaks, addDays } from '../site/js/stats.js';
+import { parseShare } from '../site/js/parse.js';
+
+const g = Object.fromEntries(DEFAULT_GAMES.map((x) => [x.id, x]));
+const lines = []; let failed = 0;
+const eq = (name, got, want) => {
+  const ok = JSON.stringify(got) === JSON.stringify(want);
+  if (!ok) failed++;
+  lines.push(`${ok ? 'ok  ' : 'FAIL'} ${name}${ok ? '' : ` got=${JSON.stringify(got)} want=${JSON.stringify(want)}`}`);
+};
+const sc = (id, value, extra = {}) => computeScore(g[id], { value, ...extra });
+
+eq('wordle 1..6', [1,2,3,4,5,6].map((v) => sc('wordle', v)), [100,90,75,55,35,15]);
+eq('wordle X', sc('wordle', 0, { solved: false }), 0);
+eq('minecraftle', [sc('minecraftle', 1), sc('minecraftle', 10)], [100, 10]);
+eq('globle', [1,2,3,10,100,500].map((v) => sc('globle', v)), [100,84.9,76.1,50,0,0]);
+eq('contexto', [1,10,100,1000].map((v) => sc('contexto', v)), [100,66.7,33.3,0]);
+eq('contexto hints', [sc('contexto', 10, { hints: 2 }), sc('contexto', 500, { hints: 3 })], [46.7, 0]);
+eq('linear max', [sc('plain', 1000), sc('krillion', 700), sc('chainle', 5000)], [100,100,100]);
+eq('linear half', [sc('plain', 500), sc('krillion', 350), sc('chainle', 2500)], [50,50,50]);
+
+const r = (date, playerId, gameId, score) => ({ date, playerId, gameId, score, solved: true, value: 1 });
+const data = [r('2026-11-01','a','x',0.1), r('2026-11-01','a','y',0.2), r('2026-11-01','b','x',0.3), r('2026-11-02','b','x',5), r('2026-11-02','a','x',9), r('2026-12-01','b','x',99)];
+eq('day tie shares place', dayStandings(data, '2026-11-01').map((s) => s.place), [1,1]);
+eq('month', monthStandings(data, '2026-11').map((s) => [s.playerId, s.total, s.wins, s.days, s.place]), [['a',9.3,2,2,1],['b',5.3,1,2,2]]);
+eq('zero day no win', monthStandings([r('2026-11-01','a','x',0)], '2026-11')[0].wins, 0);
+eq('addDays over month', addDays('2026-11-30', 1), '2026-12-01');
+eq('streak', streaks(data, 'a', '2026-11-03'), { current: 2, best: 2 });
+eq('streak broken', streaks(data, 'a', '2026-11-10').current, 0);
+
+eq('share wordle', parseShare('Wordle 1,621 3/6*\n\n⬛🟨'), { gameId:'wordle', value:3, hints:0, solved:true });
+eq('share wordle X', parseShare('Wordle 1 621 X/6').solved, false);
+eq('share contexto', parseShare('I played contexto.me #650 and got it in 23 guesses and 2 hints.'), { gameId:'contexto', value:23, hints:2, solved:true });
+eq('share globle', parseShare('🌎 Nov 26, 2026 🌍\n#globle\n🟧🟥🟩 = 7'), { gameId:'globle', value:7, hints:0, solved:true });
+eq('share unknown', parseShare('hello 5'), null);
+document.getElementById('out').textContent = `${failed ? 'FAILED: ' + failed : 'ALL PASSED'}\n` + lines.join('\n');
+</script>

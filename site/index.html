@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d0f16">
+  <meta name="robots" content="noindex">
+  <title>Everyday Grind</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <a class="brand" href="#/">Everyday<span>Grind</span></a>
+    <nav class="tabs">
+      <a href="#/" data-tab="day">Сьогодні</a>
+      <a href="#/month" data-tab="month">Місяць</a>
+      <a href="#/history" data-tab="history">Історія</a>
+      <a href="#/hall" data-tab="hall">Зала слави</a>
+      <a href="#/log" data-tab="log">Журнал</a>
+    </nav>
+    <button id="me" class="btn me">Хто ви?</button>
+  </header>
+  <div id="demo-banner" class="banner" hidden>Демо-режим: дані вигадані та зберігаються лише в цьому браузері. Таблицю ще не підключено.</div>
+  <main id="view"><p class="empty">Завантаження…</p></main>
+
+  <dialog id="who-dialog">
+    <div class="dialog-head"><h2>Хто ви?</h2><button type="button" class="btn ghost" data-close aria-label="Закрити">✕</button></div>
+    <p class="hint">Пристрій запам’ятає вибір. Змінити його можна будь-коли кнопкою в шапці.</p>
+    <div id="who-list" class="who-list"></div>
+    <form id="add-player">
+      <input name="name" maxlength="24" placeholder="Новий гравець" autocomplete="off" aria-label="Ім’я нового гравця">
+      <button class="btn">Додати</button>
+    </form>
+    <p id="who-error" class="error-text" aria-live="polite"></p>
+  </dialog>
+
+  <dialog id="paste-dialog">
+    <div class="dialog-head"><h2>Share-текст</h2><button type="button" class="btn ghost" data-close aria-label="Закрити">✕</button></div>
+    <p class="hint">Для Wordle, Angledle, Minecraftle, Globle та Contexto. Перевірте результат перед збереженням.</p>
+    <textarea rows="6" placeholder="Wordle 1,621 3/6" aria-label="Share-текст"></textarea>
+    <p id="paste-info" aria-live="polite"></p>
+    <button type="button" id="paste-save" class="btn primary" disabled>Зберегти</button>
+  </dialog>
+
+  <div id="toast" role="status"></div>
+  <script src="config.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

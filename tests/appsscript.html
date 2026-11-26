@@ -1,0 +1,88 @@
+<!doctype html><meta charset="utf-8"><title>Тест Apps Script</title><pre id="out">…</pre>
+<script>
+// Підроблені сервіси Google: перевіряють логіку скрипта, але НЕ обчислюють формули таблиці.
+const book = {}; const formulas = {};
+const col = (L) => L.charCodeAt(0) - 64;
+function makeSheet(name) {
+  const rows = [];
+  const range = (r, c, h = 1, w = 1) => {
+    const api = {
+      setValues(v) { v.forEach((line, i) => line.forEach((x, j) => { (rows[r - 1 + i] ||= [])[c - 1 + j] = x; })); return api; },
+      setFormula(f) { formulas[`${name}!${r},${c}`] = f; (rows[r - 1] ||= [])[c - 1] = ''; return api; },
+      setFontWeight: () => api, setNumberFormat: () => api, clearContent: () => api,
+    };
+    return api;
+  };
+  return {
+    rows,
+    getRange(a, b, c, d) {
+      if (typeof a !== 'string') return range(a, b, c, d);
+      const m = a.match(/^([A-Z])(\d+)/);
+      return m ? range(+m[2], col(m[1])) : range(1, 1, 0, 0);
+    },
+    setFrozenRows() {}, getLastRow: () => rows.length, getMaxRows: () => 1000, insertRowsAfter() {},
+    appendRow(v) { rows.push(v.slice()); }, deleteRow(n) { rows.splice(n - 1, 1); },
+    getDataRange: () => ({ getValues() { const w = Math.max(...rows.map((r) => r.length)); return rows.map((r) => Array.from({ length: w }, (_, i) => r[i] ?? '')); } }),
+  };
+}
+const ss = { setSpreadsheetLocale() {}, setSpreadsheetTimeZone() {}, getSheetByName: (n) => book[n] || null, insertSheet: (n) => (book[n] = makeSheet(n)) };
+let NOW = '2026-11-26'; let triggers = 0;
+// Замість формули: бал = значення × 10, щойно скрипт робить flush.
+const fakeScores = () => book.Results?.rows.slice(1).forEach((r) => { if (r[7] === '') r[7] = r[4] * 10; });
+const SpreadsheetApp = { getActive: () => ss, flush: fakeScores };
+const chain = new Proxy({}, { get: (_, k) => (k === 'create' ? () => triggers++ : () => chain) });
+const ScriptApp = { getProjectTriggers: () => [], newTrigger: () => chain };
+const LockService = { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) };
+const Utilities = { formatDate: () => NOW };
+const ContentService = { MimeType: {}, createTextOutput: (t) => ({ setMimeType: () => JSON.parse(t) }) };
+</script>
+<script src="../apps-script/Code.gs"></script>
+<script>
+const lines = []; let failed = 0;
+const eq = (n, got, want) => { const ok = JSON.stringify(got) === JSON.stringify(want); if (!ok) failed++; lines.push(`${ok ? 'ok  ' : 'FAIL'} ${n}${ok ? '' : ` got=${JSON.stringify(got)}`}`); };
+const post = (b) => doPost({ postData: { contents: JSON.stringify(b) } });
+try {
+  setup(); setup();
+  eq('config not duplicated', book.Config.rows.length, 9);
+  eq('trigger created', triggers > 0, true);
+  eq('add players', [post({ action: 'addPlayer', name: 'Оля' }).ok, post({ action: 'addPlayer', name: 'Ян' }).ok], [true, true]);
+  eq('duplicate name', post({ action: 'addPlayer', name: 'оля' }).ok, false);
+  eq('formula name', post({ action: 'addPlayer', name: '=1+1' }).ok, false);
+  const base = { action: 'saveResult', date: '2026-10-05', playerId: 'p1', gameId: 'wordle', actorId: 'p2', device: 'phone' };
+  eq('save', post({ ...base, value: 3 }).ok, true);
+  const f = formulas['Results!2,8'];
+  eq('no placeholders left', /\{r\}/.test(f), false);
+  let depth = 0, min = 0; for (const ch of f) { if (ch === '(') depth++; if (ch === ')') depth--; min = Math.min(min, depth); }
+  eq('formula parentheses', [depth, min], [0, 0]);
+  eq('bad value', post({ ...base, value: 7 }).ok, false);
+  eq('future date', post({ ...base, date: '2026-11-27', value: 2 }).ok, false);
+  eq('bad date', post({ ...base, date: '2026-02-30', value: 2 }).ok, false);
+  eq('unknown action', post({ action: 'toString' }).ok, false);
+  post({ ...base, value: 2 }); post({ ...base, value: 2 });
+  const state = doGet().data;
+  eq('one result after edit', state.results.length, 1);
+  eq('log actions', state.log.map((l) => l.action), ['edit', 'add', 'player', 'player']);
+  eq('log actor', [state.log[0].actorName, state.log[0].device, state.log[0].before, state.log[0].after], ['Ян', 'телефон', '3/6', '2/6']);
+  book.Champions.rows.splice(1); // ніби місяць щойно завершився
+  book.Results.rows[1][7] = 90;
+  monthlyChampionJob(); monthlyChampionJob();
+  eq('champion once', doGet().data.champions, [{ month: '2026-10', playerId: 'p1', name: 'Оля', total: 90, wins: 1 }]);
+  book.Results.rows[1][7] = 100; recalculateLastMonth();
+  eq('recalculate', doGet().data.champions.map((c) => c.total), [100]);
+  eq('delete', post({ ...base, action: 'deleteResult' }).data.results.length, 0);
+  // Пізнє введення: чемпіон перераховується сам.
+  const late = { action: 'saveResult', date: '2026-10-05', gameId: 'wordle', value: 3 };
+  post({ ...late, playerId: 'p1', actorId: 'p1' });
+  eq('champion appears after late entry', doGet().data.champions.map((c) => c.name), ['Оля']);
+  post({ ...late, date: '2026-10-06', playerId: 'p2', actorId: 'p2', value: 5 });
+
+  eq('champion moves', doGet().data.champions.map((c) => c.name), ['Ян']);
+  eq('champion change logged', doGet().data.log.filter((l) => l.action === 'champion').map((l) => [l.before, l.after])[0], ['Оля', 'Ян']);
+  post({ ...late, action: 'deleteResult', date: '2026-10-06', playerId: 'p2', actorId: 'p2' });
+  eq('champion returns after delete', doGet().data.champions.map((c) => c.name), ['Оля']);
+  post({ ...late, date: '2026-11-03', playerId: 'p2', actorId: 'p2' });
+  eq('current month has no champion', doGet().data.champions.map((c) => c.month), ['2026-10']);
+  lines.push('', formulas['Results!2,8'] || f, '', formulas['Daily!2,1'], formulas['Monthly!2,1']);
+} catch (e) { failed++; lines.push('CRASH ' + e.stack); }
+document.getElementById('out').textContent = `${failed ? 'FAILED: ' + failed : 'ALL PASSED'}\n` + lines.join('\n');
+</script>
