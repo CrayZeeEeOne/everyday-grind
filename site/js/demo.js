@@ -1,9 +1,9 @@
 // Демо-режим: імітує таблицю в localStorage, щоб подивитися сайт до налаштування.
-import { DEFAULT_GAMES, computeScore, valueLimits, describeResult } from './scoring.js';
+import { DEFAULT_GAMES, computeScore, valueLimits, isValidValue, describeResult } from './scoring.js';
 import { monthStandings, addDays } from './stats.js';
 import { todayKyiv, shiftMonth } from './dates.js';
 
-const KEY = 'eg.demo.v6';
+const KEY = 'eg.demo.v7';
 
 function championsOf(results, players, month) {
   return monthStandings(results, month).filter((r) => r.place === 1 && r.total > 0)
@@ -90,7 +90,7 @@ export function createDemoBackend() {
       const solved = body.solved !== false;
       const value = solved ? Number(body.value) : 0;
       const { min, max } = valueLimits(game);
-      if (solved && (!Number.isInteger(value) || value < min || value > max)) throw new Error(`Результат: потрібне ціле число від ${min} до ${max}`);
+      if (solved && !isValidValue(game, value)) throw new Error(`Результат: потрібне число від ${min} до ${max}`);
       const hints = game.hintPenalty ? Number(body.hints) || 0 : 0;
       if (!Number.isInteger(hints) || hints < 0) throw new Error('Підказки: потрібне ціле невід’ємне число');
       const r = { date: body.date, playerId: player.id, gameId: game.id, value, hints, solved };

@@ -2,8 +2,8 @@
 import { loadState, send, cachedState, isDemo } from './api.js';
 import { todayKyiv } from './dates.js';
 import { html } from './html.js';
-import { computeScore, valueLimits, describeResult } from './scoring.js';
-import { parseShareAll } from './parse.js';
+import { computeScore, valueLimits, isValidValue, describeResult } from './scoring.js';
+import { parseShare, parseAngledle, angledleTotal } from './parse.js';
 import { drawChart } from './chart.js';
 import { dayView, monthView, monthSeries, historyView, hallView, logView, dot } from './views.js';
 
@@ -53,17 +53,16 @@ function toast(message, isError) {
   toastTimer = setTimeout(() => (el.className = ''), isError ? 6000 : 2500);
 }
 
-async function save(gameId, body, date, okText, player = ctx.me) {
+async function save(gameId, body, date, okText) {
+  const player = ctx.me;
   ctx.busy.add(gameId);
   render();
   try {
     ctx.state = await send({ ...body, gameId, date, playerId: player, actorId: player });
     ctx.drafts.delete(`${date}|${player}|${gameId}`);
     toast(okText);
-    return true;
   } catch (e) {
     toast(e.message, true);
-    return false;
   } finally {
     ctx.busy.delete(gameId);
     render();
@@ -73,7 +72,7 @@ async function save(gameId, body, date, okText, player = ctx.me) {
 // badInput: браузер повертає порожнє значення, якщо введено не число.
 function formResult(form) {
   const { value, hints } = form.elements;
-  return { value: value.value, hints: hints?.value || 0, bad: value.validity.badInput || Boolean(hints?.validity.badInput) };
+  return { value: value.value.trim().replace(',', '.'), hints: hints?.value || 0, bad: value.validity.badInput || Boolean(hints?.validity.badInput) };
 }
 
 view.addEventListener('input', (e) => {
@@ -82,8 +81,8 @@ view.addEventListener('input', (e) => {
   const game = ctx.state.games.find((g) => g.id === form.dataset.game);
   const { value, hints } = formResult(form);
   ctx.drafts.set(`${route().date}|${ctx.me}|${game.id}`, { value, hints });
-  const n = Number(value), { min, max } = valueLimits(game);
-  const ok = value !== '' && Number.isInteger(n) && n >= min && n <= max;
+  const n = Number(value);
+  const ok = value !== '' && isValidValue(game, n);
   form.querySelector('.preview').textContent = ok ? `Балів буде: ${computeScore(game, { value: n, hints: Number(hints) })}` : '';
 });
 
@@ -91,7 +90,7 @@ view.addEventListener('submit', (e) => {
   e.preventDefault();
   const form = e.target;
   const { value, hints, bad } = formResult(form);
-  if (bad || value === '') return toast('Введіть результат числом', true);
+  if (bad || value === '' || !Number.isFinite(Number(value))) return toast('Введіть результат числом', true);
   save(form.dataset.game, { action: 'saveResult', value: Number(value), hints: Number(hints), solved: true }, route().date, 'Збережено');
 });
 
@@ -160,34 +159,46 @@ $('#add-player').addEventListener('submit', async (e) => {
 /* ---------- Share-текст ---------- */
 
 const pasteDialog = $('#paste-dialog');
-let parsed = [];
+let parsed = null;
 function openPaste() {
-  parsed = [];
+  parsed = null;
   pasteDialog.querySelector('textarea').value = '';
-  $('#paste-info').textContent = '';
-  $('#paste-save').disabled = true;
+  pasteGuess.querySelector('input').value = '';
+  updatePaste();
   pasteDialog.showModal();
 }
-pasteDialog.querySelector('textarea').addEventListener('input', (e) => {
-  const gameOf = (r) => ctx.state.games.find((g) => g.id === r.gameId && g.active);
-  parsed = parseShareAll(e.target.value).filter((r) => {
-    const game = gameOf(r);
-    if (!game) return false;
-    const { min, max } = valueLimits(game);
-    return !r.solved || (r.value >= min && r.value <= max);
-  });
-  $('#paste-info').textContent = parsed.length
-    ? parsed.map((r) => `${gameOf(r).name}: ${describeResult(gameOf(r), r)}. Балів: ${computeScore(gameOf(r), r)}`).join('\n')
-    : e.target.value.trim() ? 'Не вдалося розпізнати. Введіть результат у картці гри вручну.' : '';
-  $('#paste-save').disabled = !parsed.length;
-});
-$('#paste-save').addEventListener('click', async () => {
-  const list = parsed, date = route().date, player = ctx.me;
-  pasteDialog.close();
-  for (const { gameId, ...result } of list) {
-    // Після першої помилки зупиняємось, щоб повідомлення про неї не зникло.
-    if (!(await save(gameId, { action: 'saveResult', ...result }, date, 'Збережено', player))) break;
+const pasteGuess = $('#paste-guess');
+
+function updatePaste() {
+  const text = pasteDialog.querySelector('textarea').value;
+  const angle = parseAngledle(text);
+  // Поле для Guess потрібне, лише коли його не можна визначити з тексту.
+  pasteGuess.hidden = !angle || angle.guess !== null;
+  let found = parseShare(text), waiting = false;
+  if (angle) {
+    const typed = pasteGuess.querySelector('input').value;
+    const guess = angle.guess ?? (typed === '' ? null : Number(typed));
+    waiting = guess === null;
+    found = !waiting && guess >= 0 && guess <= 100
+      ? { gameId: 'angledle', value: angledleTotal(guess, angle.draw, angle.higherLower), hints: 0, solved: true }
+      : null;
   }
+  const game = found && ctx.state.games.find((g) => g.id === found.gameId && g.active);
+  parsed = game && (!found.solved || isValidValue(game, found.value)) ? found : null;
+
+  let info = '';
+  if (parsed) info = `${game.name}: ${describeResult(game, parsed)}. Балів: ${computeScore(game, parsed)}`;
+  else if (waiting) info = `Draw It: ${angle.draw}, Higher or Lower: ${angle.higherLower}. Впишіть бали Guess, і порахую середнє.`;
+  else if (angle) info = 'Бали Guess мають бути від 0 до 100.';
+  else if (text.trim()) info ='Не вдалося розпізнати. Введіть результат у картці гри вручну.';
+  $('#paste-info').textContent = info;
+  $('#paste-save').disabled = !parsed;
+}
+pasteDialog.addEventListener('input', updatePaste);
+$('#paste-save').addEventListener('click', () => {
+  const { gameId, ...result } = parsed;
+  pasteDialog.close();
+  save(gameId, { action: 'saveResult', ...result }, route().date, 'Збережено');
 });
 
 document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => b.closest('dialog').close()));

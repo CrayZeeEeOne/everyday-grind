@@ -43,7 +43,7 @@ const eq = (n, got, want) => { const ok = JSON.stringify(got) === JSON.stringify
 const post = (b) => doPost({ postData: { contents: JSON.stringify(b) } });
 try {
   setup(); setup();
-  eq('config not duplicated', book.Config.rows.length, 10);
+  eq('config not duplicated', book.Config.rows.length, 8);
   eq('trigger created', triggers > 0, true);
   eq('add players', [post({ action: 'addPlayer', name: 'Оля' }).ok, post({ action: 'addPlayer', name: 'Ян' }).ok], [true, true]);
   eq('duplicate name', post({ action: 'addPlayer', name: 'оля' }).ok, false);
@@ -69,6 +69,7 @@ try {
   eq('champion once', doGet().data.champions, [{ month: '2026-10', playerId: 'p1', name: 'Оля', total: 90, wins: 1 }]);
   book.Results.rows[1][7] = 100; recalculateLastMonth();
   eq('recalculate', doGet().data.champions.map((c) => c.total), [100]);
+const total = { action: 'saveResult', date: '2026-11-20', playerId: 'p1', gameId: 'angledle', actorId: 'p1' };  eq('angledle tenths saved', [post({ ...total, value: 78.7 }).ok, post({ ...total, value: 78.75 }).ok, post({ ...total, value: 101 }).ok], [true, false, false]);  eq('angledle log text', doGet().data.log[0].after, '78.7/100');  post({ ...total, action: 'deleteResult' });
   eq('delete', post({ ...base, action: 'deleteResult' }).data.results.length, 0);
   // Пізнє введення: чемпіон перераховується сам.
   const late = { action: 'saveResult', date: '2026-10-05', gameId: 'wordle', value: 3 };

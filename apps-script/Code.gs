@@ -30,8 +30,7 @@ var SIX = '100|90|75|55|35|15';
 var DEFAULT_CONFIG = [
   ['wordle', 'Wordle', 'https://www.nytimes.com/games/wordle/index.html', 'table', 6, 1, 0, SIX, 'спроб', true],
   ['globle', 'Globle', 'https://globle-game.com/', 'log', 100, 1, 0, '', 'спроб', true],
-  ['angledle', 'Angledle', 'https://angledle.com/', 'table', 6, 1, 0, SIX, 'спроб', true],
-  ['angledraw', 'Angledle Draw It', 'https://angledle.com/', 'linear', 100, 0, 0, '', 'очок', true],  ['anglehl', 'Angledle Higher/Lower', 'https://angledle.com/', 'linear', 100, 0, 0, '', 'очок', true],
+  ['angledle', 'Angledle', 'https://angledle.com/', 'linear', 100, 0, 0, '', '/100', true],
   ['krillion', 'Krillion', 'https://krillion.io/', 'linear', 700, 0, 0, '', 'очок', true],
   ['plain', 'Plain', 'https://playplain.app/', 'linear', 10000, 0, 0, '', 'м', true],
   ['chainle', 'Chainle', 'https://chainle.io/', 'linear', 5000, 0, 0, '', 'очок', true],
@@ -260,7 +259,8 @@ function saveResult_(body) {
     var min = game.type === 'linear' ? 0 : 1;
     var max = game.type === 'table' ? String(game.table).split('|').length
       : game.type === 'linear' ? Number(game.max) : 100000;
-    value = checkInt_(body.value, min, max, 'Результат');
+    // Одиниця "/100" означає загальний бал із десятими (78.7).
+    value = game.unit === '/100' ? checkTenths_(body.value, min, max, 'Результат') : checkInt_(body.value, min, max, 'Результат');
   }
 
   var key = date + '|' + player.id + '|' + game.id;
@@ -317,6 +317,7 @@ function addPlayer_(body) {
 function describe_(game, r) {
   if (!isTrue_(r.solved)) return 'не пройдено';
   var text = game.type === 'table' ? r.value + '/' + game.max
+    : game.unit === '/100' ? r.value + '/100'
     : game.unit === 'м' ? r.value + ' м' : game.unit + ': ' + r.value;
   if (Number(game.hintPenalty) && Number(r.hints)) text += ', підказок: ' + r.hints;
   return text;
@@ -374,6 +375,14 @@ function checkDate_(date) {
   }
   if (date > today_()) throw new Error('Не можна вносити результати за майбутні дні');
   return date;
+}
+
+function checkTenths_(raw, min, max, label) {
+  var n = Number(raw);
+  if (raw === '' || raw === null || !isFinite(n) || Math.abs(n * 10 - Math.round(n * 10)) > 1e-9 || n < min || n > max) {
+    throw new Error(label + ': потрібне число від ' + min + ' до ' + max + ', щонайбільше з одним знаком після коми');
+  }
+  return n;
 }
 
 function checkInt_(raw, min, max, label) {

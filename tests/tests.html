@@ -1,8 +1,8 @@
 <!doctype html><meta charset="utf-8"><title>Тести</title><pre id="out">…</pre>
 <script type="module">
-import { DEFAULT_GAMES, computeScore } from '../site/js/scoring.js';
+import { DEFAULT_GAMES, computeScore, isValidValue, describeResult } from '../site/js/scoring.js';
 import { dayStandings, monthStandings, streaks, addDays } from '../site/js/stats.js';
-import { parseShare, parseShareAll } from '../site/js/parse.js';
+import { parseShare, parseAngledle, angledleTotal } from '../site/js/parse.js';
 
 const g = Object.fromEntries(DEFAULT_GAMES.map((x) => [x.id, x]));
 const lines = []; let failed = 0;
@@ -41,7 +41,6 @@ const real = {
   krillion: ['Krillion #134 🦐\n255\n\n🏮🐟🐟🫧🐟🦑🫧', 255],
   plain: ['https://plaingame.app/c/example\nPlain Game #034 — ✈️ 4,802 m\n🎯⬜️🟩🟨⬜️⬜️🎯  ⭐️ Golden: round 1\n🔥 2-day streak\nHigher than 98% of today’s flights\nTry one: In what year was The Great Gatsby first published?\nCan you beat me? plaingame.app', 4802],
   globle: ['Globle Stats\n🌎 Nov 26, 2026 🌍\n🔥 1 | Avg. Guesses: 20\n🟥🟧🟧⬜️🟧🟨🟥🟧\n🟥🟥🟧🟥🟥🟥🟥🟥\n🟥🟥🟥🟩 = 20\n\nhttps://globle-game.com\n#globle', 20],
-  angledle: ['Angledle #1790\nGuess 6/6 🔴🟡🟡🟢🟡🟢\nDraw It 74/100 🟩🟩🟥\nHigher or Lower 63/100 🟩🟥🟥🟩🟩\nangledle.com', 6],
   wordle: ['Wordle 1 986 5/6\n\n⬛️⬛️🟨⬛️🟨\n⬛️⬛️⬛️🟨⬛️\n⬛️⬛️⬛️⬛️⬛️\n🟩⬛️⬛️🟨⬛️\n🟩🟩🟩🟩🟩', 5],
   contexto: ['I played contexto.me 11/26/2026 and got it in 38 guesses.\n\n🟩🟩 18\n🟨 8\n🟥🟥 12', 38],
   chainle: ['Chainle #99 · 2,660 🔗\nBeat 68% of players\n🟧🟩🟧🟨🟥\nhttps://chainle.io', 2660],
@@ -50,6 +49,17 @@ for (const [id, [text, value]] of Object.entries(real)) {
   eq(`real ${id}`, parseShare(text), { gameId: id, value, hints: 0, solved: true });
   eq(`real ${id} with CRLF`, parseShare(text.replaceAll('\n', '\r\n'))?.value, value);
 }
-const ids = (list) => list.map((r) => [r.gameId, r.value]);eq('angledle text gives three', ids(parseShareAll(real.angledle[0])), [['angledle', 6], ['angledraw', 74], ['anglehl', 63]]);eq('other game gives one', ids(parseShareAll(real.chainle[0])), [['chainle', 2660]]);eq('unknown gives none', parseShareAll('hello 5'), []);eq('angledle modes scores', [sc('angledraw', 74), sc('anglehl', 63)], [74, 63]);
+eq('angledle total', [sc('angledle', 78.7), sc('angledle', 100), sc('angledle', 0)], [78.7, 100, 0]);
+eq('angledle tenths only', [78.7, 100, 0, 78.75, 100.1, -1].map((v) => isValidValue(g.angledle, v)), [true, true, true, false, false, false]);
+eq('others stay whole', isValidValue(g.chainle, 78.7), false);
+eq('angledle text', describeResult(g.angledle, { value: 78.7, solved: true }), '78.7/100');
+eq('angledle share not parsed', parseShare('Angledle #1790\nGuess 6/6\nDraw It 74/100'), null);
+const angle = 'Angledle #1790\nGuess 6/6 🔴🟡🟡🟢🟡🟢\nDraw It 74/100 🟩🟩🟥\nHigher or Lower 63/100 🟩🟥🟥🟩🟩\nangledle.com';
+eq('angledle parts', parseAngledle(angle), { draw: 74, higherLower: 63, guess: null });
+eq('angledle parts CRLF', parseAngledle(angle.replaceAll('\n', '\r\n'))?.higherLower, 63);
+eq('angledle first try', parseAngledle(angle.replace('6/6', '1/6')).guess, 100);
+eq('angledle incomplete', parseAngledle('Angledle #1790\nGuess 6/6'), null);
+eq('not angledle', parseAngledle('Wordle 1 986 5/6'), null);
+eq('angledle average from screenshot', angledleTotal(47, 89, 100), 78.7);
 document.getElementById('out').textContent = `${failed ? 'FAILED: ' + failed : 'ALL PASSED'}\n` + lines.join('\n');
 </script>

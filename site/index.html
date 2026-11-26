@@ -37,8 +37,9 @@
 
   <dialog id="paste-dialog">
     <div class="dialog-head"><h2>Share-текст</h2><button type="button" class="btn ghost" data-close aria-label="Закрити">✕</button></div>
-    <p class="hint">Текст Angledle заповнює всі три його режими одразу. Перевірте результат перед збереженням.</p>
+    <p class="hint">Для Angledle сайт додатково спитає бали Guess і сам порахує середнє. Перевірте результат перед збереженням.</p>
     <textarea rows="6" placeholder="Wordle 1,621 3/6" aria-label="Share-текст"></textarea>
+    <label id="paste-guess" class="paste-guess" hidden><span>Бали Guess з екрана результатів (0–100)</span><input type="number" inputmode="numeric" min="0" max="100" step="1"></label>
     <p id="paste-info" aria-live="polite"></p>
     <button type="button" id="paste-save" class="btn primary" disabled>Зберегти</button>
   </dialog>

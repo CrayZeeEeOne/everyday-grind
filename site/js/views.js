@@ -1,6 +1,6 @@
 // Розмітка сторінок. Дані приходять у ctx, події обробляє app.js.
 import { html, num, safeUrl } from './html.js';
-import { valueLimits, describeResult } from './scoring.js';
+import { valueLimits, allowsTenths, describeResult } from './scoring.js';
 import { dayStandings, dayWinners, monthStandings, allDates, addDays, streaks, personalBest, badges } from './stats.js';
 import { longDate, shortDate, monthName, shiftMonth, stamp } from './dates.js';
 
@@ -73,7 +73,10 @@ function gameCard(ctx, g, date) {
   const draft = ctx.drafts.get(`${date}|${ctx.me}|${g.id}`) || {};
   const value = draft.value ?? (r?.solved ? r.value : '');
   const hints = draft.hints ?? (r?.hints || '');
-  const label = g.type === 'linear' ? `${g.unit === 'м' ? 'Метри' : 'Очки'} (0–${num(max)})` : g.type === 'table' ? `Спроба (${min}–${max})` : 'Спроби';
+  const measure = g.unit === 'м' ? 'Метри' : allowsTenths(g) ? 'Загальний бал' : 'Очки';
+  const label = g.type === 'linear' ? `${measure} (0–${num(max)})` : g.type === 'table' ? `Спроба (${min}–${max})` : 'Спроби';
+  // Для десяткових значень поле текстове: так приймаються і "78.7", і "78,7".
+  const kind = allowsTenths(g) ? html`type="text" inputmode="decimal"` : html`type="number" inputmode="numeric"`;
   const busy = ctx.busy.has(g.id);
   return html`<form class="card ${r ? 'done' : ''}" data-game="${g.id}" novalidate>
     <div class="card-head">
@@ -82,7 +85,7 @@ function gameCard(ctx, g, date) {
     </div>
     <p class="card-note">${r ? html`${describeResult(g, r)} · ${stamp(r.updatedAt)}` : 'ще не внесено'}</p>
     <div class="fields">
-      <label><span>${label}</span><input name="value" type="number" inputmode="numeric" min="${min}" max="${max}" step="1" value="${value}"></label>
+      <label><span>${label}</span><input name="value" ${kind} min="${min}" max="${max}" step="1" value="${value}"></label>
       ${g.hintPenalty > 0 && html`<label class="narrow"><span>Підказки</span><input name="hints" type="number" inputmode="numeric" min="0" step="1" value="${hints}" placeholder="0"></label>`}
     </div>
     <p class="preview" aria-live="polite"></p>

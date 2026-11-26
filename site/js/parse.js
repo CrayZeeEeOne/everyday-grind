@@ -1,13 +1,11 @@
 // Розбір share-тексту. Формати взяті зі справжніх прикладів (вони є в tests/tests.html).
+// Angledle обробляється окремо (parseAngledle): у його тексті немає балів Guess.
 export function parseShare(text) {
   const t = String(text).trim();
   let m;
 
   // Wordle 1 986 5/6
   if ((m = t.match(/^wordle\b[^\n]*?\s([1-6X])\/6/im))) return attempts('wordle', m[1]);
-
-  // Angledle #1790, а далі "Guess 6/6 ...". Інші міні-ігри з цього тексту не враховуються.
-  if (/^angledle\b/im.test(t) && (m = t.match(/^guess\s+([1-6X])\/6/im))) return attempts('angledle', m[1]);
 
   // Krillion #134 🦐, очки окремим рядком
   if ((m = t.match(/^krillion\s+#\d+[^\n]*\n\s*(\d+)[ \t]*$/im))) return points('krillion', m[1]);
@@ -41,16 +39,20 @@ function attempts(gameId, raw) {
   return { gameId, value: failed ? 0 : Number(raw), hints: 0, solved: !failed };
 }
 
-// Усі результати з одного тексту: Angledle ділиться одразу трьома режимами.
-export function parseShareAll(text) {
-  const main = parseShare(text);
-  const found = main ? [main] : [];
+// Angledle: Draw It та Higher or Lower є в тексті, а для Guess — лише номер спроби.
+// Точні бали Guess залежать від похибки в градусах, тому їх треба спитати в гравця.
+// Виняток — вгадано з першої спроби: тоді за формулою гри це завжди 100.
+export function parseAngledle(text) {
   const t = String(text);
-  if (/^\s*angledle\b/im.test(t)) {
-    for (const [gameId, line] of [['angledraw', /^\s*draw it\s+(\d+)\/100/im], ['anglehl', /^\s*higher or lower\s+(\d+)\/100/im]]) {
-      const m = t.match(line);
-      if (m) found.push(points(gameId, m[1]));
-    }
-  }
-  return found;
+  if (!/^\s*angledle\b/im.test(t)) return null;
+  const draw = t.match(/^\s*draw it\s+(\d+)\/100/im);
+  const higherLower = t.match(/^\s*higher or lower\s+(\d+)\/100/im);
+  if (!draw || !higherLower) return null;
+  const firstTry = /^\s*guess\s+1\/6/im.test(t);
+  return { draw: Number(draw[1]), higherLower: Number(higherLower[1]), guess: firstTry ? 100 : null };
+}
+
+// Так само, як на angledle.com: середнє трьох режимів з одним знаком після коми.
+export function angledleTotal(guess, draw, higherLower) {
+  return Math.round(((guess + draw + higherLower) / 3 + Number.EPSILON) * 10) / 10;
 }
