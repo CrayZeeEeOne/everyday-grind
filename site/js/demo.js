@@ -3,7 +3,7 @@ import { DEFAULT_GAMES, computeScore, valueLimits, describeResult } from './scor
 import { monthStandings, addDays } from './stats.js';
 import { todayKyiv, shiftMonth } from './dates.js';
 
-const KEY = 'eg.demo.v1';
+const KEY = 'eg.demo.v3';
 
 function championsOf(results, players, month) {
   return monthStandings(results, month).filter((r) => r.place === 1 && r.total > 0)

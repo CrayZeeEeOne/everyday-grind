@@ -1,6 +1,6 @@
 # Everyday Grind
 
-Щоденне змагання в Wordle, Globle, Angledle, Minecraftle, Krillion, Plain, Chainle та Contexto.
+Щоденне змагання в Wordle, Globle, Angledle, Krillion, Plain, Chainle та Contexto.
 
 ```
 Сайт (Netlify)  ⇄  Google Apps Script  ⇄  Google Sheet (дані та формули)
@@ -69,10 +69,10 @@ git push -u origin main
 | Гра | Формула |
 |---|---|
 | Wordle, Angledle | 1→100, 2→90, 3→75, 4→55, 5→35, 6→15 |
-| Minecraftle | 100 за 1 спробу, далі −10 за кожну |
 | Globle | логарифмічна: 1 спроба→100, 100 і більше→0 |
 | Contexto | логарифмічна: 1→100, 1000 і більше→0; −10 за кожну підказку |
-| Krillion / Plain / Chainle | очки від максимуму 700 / 1000 / 5000 |
+| Krillion / Chainle | очки від максимуму 700 / 5000 |
+| Plain | висота в метрах від максимуму 10 000 |
 
 Переможець дня — найбільша сума (при рівності перемагають обоє).
 Чемпіон місяця — найбільша сума за місяць, при рівності вирішує кількість перемог у днях.

@@ -73,7 +73,7 @@ function gameCard(ctx, g, date) {
   const draft = ctx.drafts.get(`${date}|${ctx.me}|${g.id}`) || {};
   const value = draft.value ?? (r?.solved ? r.value : '');
   const hints = draft.hints ?? (r?.hints || '');
-  const label = g.type === 'linear' ? `Очки (0–${num(max)})` : g.type === 'table' ? `Спроба (${min}–${max})` : 'Спроби';
+  const label = g.type === 'linear' ? `${g.unit === 'м' ? 'Метри' : 'Очки'} (0–${num(max)})` : g.type === 'table' ? `Спроба (${min}–${max})` : 'Спроби';
   const busy = ctx.busy.has(g.id);
   return html`<form class="card ${r ? 'done' : ''}" data-game="${g.id}" novalidate>
     <div class="card-head">

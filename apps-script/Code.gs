@@ -31,9 +31,8 @@ var DEFAULT_CONFIG = [
   ['wordle', 'Wordle', 'https://www.nytimes.com/games/wordle/index.html', 'table', 6, 1, 0, SIX, 'спроб', true],
   ['globle', 'Globle', 'https://globle-game.com/', 'log', 100, 1, 0, '', 'спроб', true],
   ['angledle', 'Angledle', 'https://angledle.com/', 'table', 6, 1, 0, SIX, 'спроб', true],
-  ['minecraftle', 'Minecraftle', 'https://minecraftle.zachmanson.com/', 'table', 10, 1, 0, '100|90|80|70|60|50|40|30|20|10', 'спроб', true],
   ['krillion', 'Krillion', 'https://krillion.io/', 'linear', 700, 0, 0, '', 'очок', true],
-  ['plain', 'Plain', 'https://playplain.app/', 'linear', 1000, 0, 0, '', 'очок', true],
+  ['plain', 'Plain', 'https://playplain.app/', 'linear', 10000, 0, 0, '', 'м', true],
   ['chainle', 'Chainle', 'https://chainle.io/', 'linear', 5000, 0, 0, '', 'очок', true],
   ['contexto', 'Contexto', 'https://contexto.me/', 'log', 1000, 1, 10, '', 'спроб', true]
 ];
@@ -316,7 +315,8 @@ function addPlayer_(body) {
 
 function describe_(game, r) {
   if (!isTrue_(r.solved)) return 'не пройдено';
-  var text = game.type === 'table' ? r.value + '/' + game.max : game.unit + ': ' + r.value;
+  var text = game.type === 'table' ? r.value + '/' + game.max
+    : game.unit === 'м' ? r.value + ' м' : game.unit + ': ' + r.value;
   if (Number(game.hintPenalty) && Number(r.hints)) text += ', підказок: ' + r.hints;
   return text;
 }

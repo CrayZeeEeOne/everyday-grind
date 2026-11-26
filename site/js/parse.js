@@ -9,8 +9,6 @@ export function parseShare(text) {
 
   if ((m = t.match(/angledle[^\n]*?\s([1-6X])\/6/i))) return attempts('angledle', m[1]);
 
-  if ((m = t.match(/minecraftle[\s\S]*?\b(10|[1-9]|X)\/10/i))) return attempts('minecraftle', m[1]);
-
   // I played contexto.me #650 and got it in 23 guesses and 2 hints.
   if (/contexto/i.test(t)) {
     const hints = Number(t.match(/(\d+)\s+hints?/i)?.[1] || 0);
