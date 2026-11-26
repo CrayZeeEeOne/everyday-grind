@@ -34,7 +34,7 @@ var DEFAULT_CONFIG = [
   ['krillion', 'Krillion', 'https://krillion.io/', 'linear', 700, 0, 0, '', 'очок', true],
   ['plain', 'Plain', 'https://playplain.app/', 'linear', 10000, 0, 0, '', 'м', true],
   ['chainle', 'Chainle', 'https://chainle.io/', 'linear', 5000, 0, 0, '', 'очок', true],
-  ['contexto', 'Contexto', 'https://contexto.me/', 'log', 1000, 1, 10, '', 'спроб', true]
+  ['contexto', 'Contexto', 'https://contexto.me/', 'minus', 101, 1, 10, '', 'спроб', true]
 ];
 
 /* ---------- Налаштування ---------- */
@@ -60,6 +60,7 @@ function setup() {
   }
 
   setupFormulas_(ss);
+  refreshResultFormulas_();
 
   ScriptApp.getProjectTriggers().forEach(function (t) {
     if (t.getHandlerFunction() === 'monthlyChampionJob') ScriptApp.deleteTrigger(t);
@@ -67,6 +68,14 @@ function setup() {
   // 1-го числа кожного місяця приблизно о 00:05 за Києвом.
   ScriptApp.newTrigger('monthlyChampionJob').timeBased()
     .onMonthDay(1).atHour(0).nearMinute(5).inTimezone(TZ).create();
+}
+
+// Оновлює формули балів у вже внесених результатах після змін у коді.
+function refreshResultFormulas_() {
+  var sh = sheet_('Results');
+  readTable_('Results').forEach(function (r) {
+    sh.getRange(r._row, 8).setFormula(scoreFormula_(r._row));
+  });
 }
 
 function setupFormulas_(ss) {
@@ -99,7 +108,8 @@ function scoreFormula_(r) {
     'low, INDEX(Config!$F:$F, cfg), ' +
     'penalty, N(INDEX(Config!$G:$G, cfg)), ' +
     'points, IF(kind="table", IFERROR(INDEX(SPLIT(INDEX(Config!$H:$H, cfg), "|"), 1, $E{r}), 0), ' +
-    'IF(kind="log", 100*(LN(top)-LN(MAX($E{r}, low)))/(LN(top)-LN(low)), 100*$E{r}/top)), ' +
+    'IF(kind="log", 100*(LN(top)-LN(MAX($E{r}, low)))/(LN(top)-LN(low)), ' +
+    'IF(kind="minus", top-$E{r}, 100*$E{r}/top))), ' +
     'ROUND(MAX(0, MIN(100, points - $F{r}*penalty)), 1)))').replace(/\{r\}/g, r);
 }
 

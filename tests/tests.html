@@ -16,8 +16,8 @@ const sc = (id, value, extra = {}) => computeScore(g[id], { value, ...extra });
 eq('wordle 1..6', [1,2,3,4,5,6].map((v) => sc('wordle', v)), [100,90,75,55,35,15]);
 eq('wordle X', sc('wordle', 0, { solved: false }), 0);
 eq('globle', [1,2,3,10,100,500].map((v) => sc('globle', v)), [100,84.9,76.1,50,0,0]);
-eq('contexto', [1,10,100,1000].map((v) => sc('contexto', v)), [100,66.7,33.3,0]);
-eq('contexto hints', [sc('contexto', 10, { hints: 2 }), sc('contexto', 500, { hints: 3 })], [46.7, 0]);
+eq('contexto', [1,3,38,100,101,500].map((v) => sc('contexto', v)), [100,98,63,1,0,0]);
+eq('contexto hints', [sc('contexto', 10, { hints: 2 }), sc('contexto', 95, { hints: 3 })], [71, 0]);
 eq('linear max', [sc('plain', 10000), sc('krillion', 700), sc('chainle', 5000)], [100,100,100]);
 eq('linear half', [sc('plain', 5000), sc('krillion', 350), sc('chainle', 2500)], [50,50,50]);
 

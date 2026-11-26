@@ -70,6 +70,7 @@ try {
   book.Results.rows[1][7] = 100; recalculateLastMonth();
   eq('recalculate', doGet().data.champions.map((c) => c.total), [100]);
 const total = { action: 'saveResult', date: '2026-11-20', playerId: 'p1', gameId: 'angledle', actorId: 'p1' };  eq('angledle tenths saved', [post({ ...total, value: 78.7 }).ok, post({ ...total, value: 78.75 }).ok, post({ ...total, value: 101 }).ok], [true, false, false]);  eq('angledle log text', doGet().data.log[0].after, '78.7/100');  post({ ...total, action: 'deleteResult' });
+delete formulas['Results!2,8']; setup();  eq('setup rewrites score formulas', /kind="minus", top-/.test(formulas['Results!2,8'] || ''), true);
   eq('delete', post({ ...base, action: 'deleteResult' }).data.results.length, 0);
   // Пізнє введення: чемпіон перераховується сам.
   const late = { action: 'saveResult', date: '2026-10-05', gameId: 'wordle', value: 3 };

@@ -11,7 +11,7 @@ export const DEFAULT_GAMES = [
   { id: 'krillion', name: 'Krillion', url: 'https://krillion.io/', type: 'linear', max: 700, best: 0, hintPenalty: 0, table: '', unit: 'очок', active: true },
   { id: 'plain', name: 'Plain', url: 'https://playplain.app/', type: 'linear', max: 10000, best: 0, hintPenalty: 0, table: '', unit: 'м', active: true },
   { id: 'chainle', name: 'Chainle', url: 'https://chainle.io/', type: 'linear', max: 5000, best: 0, hintPenalty: 0, table: '', unit: 'очок', active: true },
-  { id: 'contexto', name: 'Contexto', url: 'https://contexto.me/', type: 'log', max: 1000, best: 1, hintPenalty: 10, table: '', unit: 'спроб', active: true },
+  { id: 'contexto', name: 'Contexto', url: 'https://contexto.me/', type: 'minus', max: 101, best: 1, hintPenalty: 10, table: '', unit: 'спроб', active: true },
 ];
 
 export const round1 = (n) => Math.round((n + Number.EPSILON) * 10) / 10;
@@ -21,6 +21,8 @@ export function computeScore(game, { value, hints = 0, solved = true }) {
   let base = 0;
   if (game.type === 'table') {
     base = Number(String(game.table).split('|')[value - 1] ?? 0);
+  } else if (game.type === 'minus') {
+    base = game.max - value;
   } else if (game.type === 'log') {
     base = 100 * (Math.log(game.max) - Math.log(Math.max(value, game.best))) / (Math.log(game.max) - Math.log(game.best));
   } else {
