@@ -8,6 +8,7 @@ export const DEFAULT_GAMES = [
   { id: 'wordle', name: 'Wordle', url: 'https://www.nytimes.com/games/wordle/index.html', type: 'table', max: 6, best: 1, hintPenalty: 0, table: SIX, unit: 'спроб', active: true },
   { id: 'globle', name: 'Globle', url: 'https://globle-game.com/', type: 'log', max: 100, best: 1, hintPenalty: 0, table: '', unit: 'спроб', active: true },
   { id: 'angledle', name: 'Angledle', url: 'https://angledle.com/', type: 'table', max: 6, best: 1, hintPenalty: 0, table: SIX, unit: 'спроб', active: true },
+  { id: 'angledraw', name: 'Angledle Draw It', url: 'https://angledle.com/', type: 'linear', max: 100, best: 0, hintPenalty: 0, table: '', unit: 'очок', active: true },  { id: 'anglehl', name: 'Angledle Higher/Lower', url: 'https://angledle.com/', type: 'linear', max: 100, best: 0, hintPenalty: 0, table: '', unit: 'очок', active: true },
   { id: 'krillion', name: 'Krillion', url: 'https://krillion.io/', type: 'linear', max: 700, best: 0, hintPenalty: 0, table: '', unit: 'очок', active: true },
   { id: 'plain', name: 'Plain', url: 'https://playplain.app/', type: 'linear', max: 10000, best: 0, hintPenalty: 0, table: '', unit: 'м', active: true },
   { id: 'chainle', name: 'Chainle', url: 'https://chainle.io/', type: 'linear', max: 5000, best: 0, hintPenalty: 0, table: '', unit: 'очок', active: true },

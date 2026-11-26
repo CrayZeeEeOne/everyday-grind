@@ -3,7 +3,7 @@ import { loadState, send, cachedState, isDemo } from './api.js';
 import { todayKyiv } from './dates.js';
 import { html } from './html.js';
 import { computeScore, valueLimits, describeResult } from './scoring.js';
-import { parseShare } from './parse.js';
+import { parseShareAll } from './parse.js';
 import { drawChart } from './chart.js';
 import { dayView, monthView, monthSeries, historyView, hallView, logView, dot } from './views.js';
 
@@ -53,16 +53,17 @@ function toast(message, isError) {
   toastTimer = setTimeout(() => (el.className = ''), isError ? 6000 : 2500);
 }
 
-async function save(gameId, body, date, okText) {
-  const player = ctx.me;
+async function save(gameId, body, date, okText, player = ctx.me) {
   ctx.busy.add(gameId);
   render();
   try {
     ctx.state = await send({ ...body, gameId, date, playerId: player, actorId: player });
     ctx.drafts.delete(`${date}|${player}|${gameId}`);
     toast(okText);
+    return true;
   } catch (e) {
     toast(e.message, true);
+    return false;
   } finally {
     ctx.busy.delete(gameId);
     render();
@@ -159,27 +160,34 @@ $('#add-player').addEventListener('submit', async (e) => {
 /* ---------- Share-текст ---------- */
 
 const pasteDialog = $('#paste-dialog');
-let parsed = null;
+let parsed = [];
 function openPaste() {
-  parsed = null;
+  parsed = [];
   pasteDialog.querySelector('textarea').value = '';
   $('#paste-info').textContent = '';
   $('#paste-save').disabled = true;
   pasteDialog.showModal();
 }
 pasteDialog.querySelector('textarea').addEventListener('input', (e) => {
-  const found = parseShare(e.target.value);
-  const game = found && ctx.state.games.find((g) => g.id === found.gameId && g.active);
-  const { min, max } = game ? valueLimits(game) : {};
-  parsed = game && (!found.solved || (found.value >= min && found.value <= max)) ? found : null;
-  $('#paste-info').textContent = parsed ? `${game.name}: ${describeResult(game, parsed)}. Балів: ${computeScore(game, parsed)}`
+  const gameOf = (r) => ctx.state.games.find((g) => g.id === r.gameId && g.active);
+  parsed = parseShareAll(e.target.value).filter((r) => {
+    const game = gameOf(r);
+    if (!game) return false;
+    const { min, max } = valueLimits(game);
+    return !r.solved || (r.value >= min && r.value <= max);
+  });
+  $('#paste-info').textContent = parsed.length
+    ? parsed.map((r) => `${gameOf(r).name}: ${describeResult(gameOf(r), r)}. Балів: ${computeScore(gameOf(r), r)}`).join('\n')
     : e.target.value.trim() ? 'Не вдалося розпізнати. Введіть результат у картці гри вручну.' : '';
-  $('#paste-save').disabled = !parsed;
+  $('#paste-save').disabled = !parsed.length;
 });
-$('#paste-save').addEventListener('click', () => {
-  const { gameId, ...result } = parsed;
+$('#paste-save').addEventListener('click', async () => {
+  const list = parsed, date = route().date, player = ctx.me;
   pasteDialog.close();
-  save(gameId, { action: 'saveResult', ...result }, route().date, 'Збережено');
+  for (const { gameId, ...result } of list) {
+    // Після першої помилки зупиняємось, щоб повідомлення про неї не зникло.
+    if (!(await save(gameId, { action: 'saveResult', ...result }, date, 'Збережено', player))) break;
+  }
 });
 
 document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => b.closest('dialog').close()));

@@ -31,6 +31,7 @@ var DEFAULT_CONFIG = [
   ['wordle', 'Wordle', 'https://www.nytimes.com/games/wordle/index.html', 'table', 6, 1, 0, SIX, 'спроб', true],
   ['globle', 'Globle', 'https://globle-game.com/', 'log', 100, 1, 0, '', 'спроб', true],
   ['angledle', 'Angledle', 'https://angledle.com/', 'table', 6, 1, 0, SIX, 'спроб', true],
+  ['angledraw', 'Angledle Draw It', 'https://angledle.com/', 'linear', 100, 0, 0, '', 'очок', true],  ['anglehl', 'Angledle Higher/Lower', 'https://angledle.com/', 'linear', 100, 0, 0, '', 'очок', true],
   ['krillion', 'Krillion', 'https://krillion.io/', 'linear', 700, 0, 0, '', 'очок', true],
   ['plain', 'Plain', 'https://playplain.app/', 'linear', 10000, 0, 0, '', 'м', true],
   ['chainle', 'Chainle', 'https://chainle.io/', 'linear', 5000, 0, 0, '', 'очок', true],

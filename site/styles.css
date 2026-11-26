@@ -168,3 +168,4 @@ dialog::backdrop { background: rgba(4,5,9,.7); backdrop-filter: blur(3px); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
 #paste-save { width: 100%; }
+#paste-info { white-space: pre-line; }
