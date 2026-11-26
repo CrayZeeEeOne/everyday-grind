@@ -12,6 +12,7 @@ export const DEFAULT_GAMES = [
   { id: 'plain', name: 'Plain', url: 'https://playplain.app/', type: 'linear', max: 10000, best: 0, hintPenalty: 0, table: '', unit: 'м', active: true },
   { id: 'chainle', name: 'Chainle', url: 'https://chainle.io/', type: 'linear', max: 5000, best: 0, hintPenalty: 0, table: '', unit: 'очок', active: true },
   { id: 'contexto', name: 'Contexto', url: 'https://contexto.me/', type: 'minus', max: 101, best: 1, hintPenalty: 10, table: '', unit: 'спроб', active: true },
+  { id: 'sizeitup', name: 'Size It Up', url: 'https://magnitudle.com/size-it-up', type: 'linear', max: 500, best: 0, hintPenalty: 0, table: '', unit: 'очок', active: true },
 ];
 
 export const round1 = (n) => Math.round((n + Number.EPSILON) * 10) / 10;

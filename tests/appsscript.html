@@ -43,7 +43,7 @@ const eq = (n, got, want) => { const ok = JSON.stringify(got) === JSON.stringify
 const post = (b) => doPost({ postData: { contents: JSON.stringify(b) } });
 try {
   setup(); setup();
-  eq('config not duplicated', book.Config.rows.length, 8);
+  eq('config not duplicated', book.Config.rows.length, 9);
   eq('trigger created', triggers > 0, true);
   eq('add players', [post({ action: 'addPlayer', name: 'Оля' }).ok, post({ action: 'addPlayer', name: 'Ян' }).ok], [true, true]);
   eq('duplicate name', post({ action: 'addPlayer', name: 'оля' }).ok, false);

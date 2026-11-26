@@ -34,7 +34,8 @@ var DEFAULT_CONFIG = [
   ['krillion', 'Krillion', 'https://krillion.io/', 'linear', 700, 0, 0, '', 'очок', true],
   ['plain', 'Plain', 'https://playplain.app/', 'linear', 10000, 0, 0, '', 'м', true],
   ['chainle', 'Chainle', 'https://chainle.io/', 'linear', 5000, 0, 0, '', 'очок', true],
-  ['contexto', 'Contexto', 'https://contexto.me/', 'minus', 101, 1, 10, '', 'спроб', true]
+  ['contexto', 'Contexto', 'https://contexto.me/', 'minus', 101, 1, 10, '', 'спроб', true],
+  ['sizeitup', 'Size It Up', 'https://magnitudle.com/size-it-up', 'linear', 500, 0, 0, '', 'очок', true]
 ];
 
 /* ---------- Налаштування ---------- */

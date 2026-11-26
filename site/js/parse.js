@@ -16,6 +16,9 @@ export function parseShare(text) {
   // Chainle #99 · 2,660 🔗
   if ((m = t.match(/^chainle\s+#\d+\D*?(\d[\d.,  ]*)/im))) return points('chainle', m[1]);
 
+  // Size It Up, "#109", "Score: 372/500" окремими рядками. Варіанти "Size It Up: Pop Culture" та інші не рахуються.
+  if (/^size it up[ \t]*$/im.test(t) && (m = t.match(/^score:\s*(\d+)\s*\/\s*500\b/im))) return points('sizeitup', m[1]);
+
   // I played contexto.me 11/26/2026 and got it in 38 guesses. (з підказками: "... and 2 hints")
   if (/contexto/i.test(t)) {
     const hints = Number(t.match(/(\d+)\s+hints?/i)?.[1] || 0);

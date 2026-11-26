@@ -44,6 +44,7 @@ const real = {
   wordle: ['Wordle 1 986 5/6\n\n⬛️⬛️🟨⬛️🟨\n⬛️⬛️⬛️🟨⬛️\n⬛️⬛️⬛️⬛️⬛️\n🟩⬛️⬛️🟨⬛️\n🟩🟩🟩🟩🟩', 5],
   contexto: ['I played contexto.me 11/26/2026 and got it in 38 guesses.\n\n🟩🟩 18\n🟨 8\n🟥🟥 12', 38],
   chainle: ['Chainle #99 · 2,660 🔗\nBeat 68% of players\n🟧🟩🟧🟨🟥\nhttps://chainle.io', 2660],
+  sizeitup: ['Size It Up\n#109\n\nScore: 183/500\n\n🟥⬜⬜⬜⬜ 20\n🟥⬜⬜⬜⬜ 12\n🟥🟥🟥🟥⬜ 75\n🟥🟥🟥⬜⬜ 69\n⬜⬜⬜⬜⬜ 7\n\nhttps://magnitudle.com/size-it-up', 183],
 };
 for (const [id, [text, value]] of Object.entries(real)) {
   eq(`real ${id}`, parseShare(text), { gameId: id, value, hints: 0, solved: true });
@@ -61,5 +62,11 @@ eq('angledle first try', parseAngledle(angle.replace('6/6', '1/6')).guess, 100);
 eq('angledle incomplete', parseAngledle('Angledle #1790\nGuess 6/6'), null);
 eq('not angledle', parseAngledle('Wordle 1 986 5/6'), null);
 eq('angledle average from screenshot', angledleTotal(47, 89, 100), 78.7);
+eq('sizeitup score', [sc('sizeitup', 500), sc('sizeitup', 372), sc('sizeitup', 0)], [100, 74.4, 0]);
+// Інші варіанти гри не мають зараховуватися.
+const size = 'Size It Up\n#109\n\nScore: 372/500\n\n🟥🟥🟥🟥⬜ 78\n🟥🟥🟥⬜⬜ 64\nhttps://magnitudle.com/size-it-up';
+eq('share sizeitup', parseShare(size), { gameId: 'sizeitup', value: 372, hints: 0, solved: true });
+eq('share sizeitup CRLF', parseShare(size.replaceAll('\n', '\r\n'))?.value, 372);
+eq('share other variant', parseShare(size.replace('Size It Up\n', 'Size It Up: Pop Culture\n')), null);
 document.getElementById('out').textContent = `${failed ? 'FAILED: ' + failed : 'ALL PASSED'}\n` + lines.join('\n');
 </script>
