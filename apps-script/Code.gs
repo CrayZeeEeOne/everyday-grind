@@ -34,7 +34,7 @@ var DEFAULT_CONFIG = [
   ['krillion', 'Krillion', 'https://krillion.io/', 'linear', 700, 0, 0, '', 'очок', true],
   ['plain', 'Plain', 'https://playplain.app/', 'linear', 10000, 0, 0, '', 'м', true],
   ['chainle', 'Chainle', 'https://chainle.io/', 'linear', 5000, 0, 0, '', 'очок', true],
-  ['contexto', 'Contexto', 'https://contexto.me/', 'minus', 101, 1, 10, '', 'спроб', true],
+  ['contexto', 'Contexto', 'https://contexto.me/', 'minus', 101, 1, 0.5, '', 'спроб', true],
   ['sizeitup', 'Size It Up', 'https://magnitudle.com/size-it-up', 'linear', 500, 0, 0, '', 'очок', true]
 ];
 
@@ -101,6 +101,7 @@ function setupFormulas_(ss) {
 }
 
 // Бал за один результат (0–100). Параметри беруться з вкладки Config.
+// hintPenalty від 1: стільки балів знімає кожна підказка. Менше за 1 (0.5): на це число бал множиться за кожну підказку.
 function scoreFormula_(r) {
   return ('=IF($G{r}<>TRUE, 0, LET(' +
     'cfg, MATCH($D{r}, Config!$A:$A, 0), ' +
@@ -111,7 +112,7 @@ function scoreFormula_(r) {
     'points, IF(kind="table", IFERROR(INDEX(SPLIT(INDEX(Config!$H:$H, cfg), "|"), 1, $E{r}), 0), ' +
     'IF(kind="log", 100*(LN(top)-LN(MAX($E{r}, low)))/(LN(top)-LN(low)), ' +
     'IF(kind="minus", top-$E{r}, 100*$E{r}/top))), ' +
-    'ROUND(MAX(0, MIN(100, points - $F{r}*penalty)), 1)))').replace(/\{r\}/g, r);
+    'ROUND(MAX(0, MIN(100, IF(AND(penalty>0, penalty<1), points*penalty^$F{r}, points - $F{r}*penalty))), 1)))').replace(/\{r\}/g, r);
 }
 
 function onOpen() {

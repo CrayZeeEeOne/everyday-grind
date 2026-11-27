@@ -11,7 +11,7 @@ export const DEFAULT_GAMES = [
   { id: 'krillion', name: 'Krillion', url: 'https://krillion.io/', type: 'linear', max: 700, best: 0, hintPenalty: 0, table: '', unit: 'очок', active: true },
   { id: 'plain', name: 'Plain', url: 'https://playplain.app/', type: 'linear', max: 10000, best: 0, hintPenalty: 0, table: '', unit: 'м', active: true },
   { id: 'chainle', name: 'Chainle', url: 'https://chainle.io/', type: 'linear', max: 5000, best: 0, hintPenalty: 0, table: '', unit: 'очок', active: true },
-  { id: 'contexto', name: 'Contexto', url: 'https://contexto.me/', type: 'minus', max: 101, best: 1, hintPenalty: 10, table: '', unit: 'спроб', active: true },
+  { id: 'contexto', name: 'Contexto', url: 'https://contexto.me/', type: 'minus', max: 101, best: 1, hintPenalty: 0.5, table: '', unit: 'спроб', active: true },
   { id: 'sizeitup', name: 'Size It Up', url: 'https://magnitudle.com/size-it-up', type: 'linear', max: 500, best: 0, hintPenalty: 0, table: '', unit: 'очок', active: true },
 ];
 
@@ -29,7 +29,10 @@ export function computeScore(game, { value, hints = 0, solved = true }) {
   } else {
     base = 100 * value / game.max;
   }
-  return round1(Math.max(0, Math.min(100, base - hints * (game.hintPenalty || 0))));
+  // hintPenalty від 1: стільки балів знімає кожна підказка. Менше за 1: на це число бал множиться за кожну підказку.
+  const penalty = game.hintPenalty || 0;
+  const final = penalty > 0 && penalty < 1 ? base * penalty ** hints : base - hints * penalty;
+  return round1(Math.max(0, Math.min(100, final)));
 }
 
 // Які значення дозволено вводити для гри.
